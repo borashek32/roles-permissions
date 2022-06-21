@@ -1,15 +1,38 @@
 <template>
   <div>
+    <form
+      @submit.prevent
+      class="mb-4 w-full flex mt-4"
+      >
+      <input
+        v-model="role.name"
+        class="p-4 mr-0 w-full border text-gray-800 border-gray-200 bg-white"
+        placeholder="Enter name of a new role"
+        />
+      <app-validation-errors
+        v-if="validationErrors"
+        :errors="validationErrors"
+        ></app-validation-errors>
+
+      <button
+        @click="addRole"
+        class="update_role px-8 bg-yellow-400 text-gray-800 font-bold p-4 uppercase border-yellow-500 border">
+        Create
+      </button>
+    </form>
+
+
     <div
       v-if="errored"
       class="bg-red-100 rounded-b text-red-900 px-4 py-3 shadow-md my-3" role="alert"
       >
-        <div class="flex">
-            <div>
-                <p class="text-sm">Oops:( Roles can't be loaded now. Please, try later</p>
-            </div>
-        </div>
+      <div class="flex">
+          <div>
+              <p class="text-sm">Oops:( Roles can't be loaded now. Please, try later</p>
+          </div>
+      </div>
     </div>
+
     <table
       v-else
       class="w-full rounded text-sm text-left text-gray-500 dark:text-gray-400"
@@ -93,7 +116,8 @@ export default {
       },
       edit: false,
       loading: true,
-      errored: false
+      errored: false,
+      validationErrors: ''
     }
   },
   mounted: function() {
@@ -135,6 +159,45 @@ export default {
             })
           }
         })
+    },
+    addRole() {
+      if(this.edit === false) {
+        axios
+          .post(`/admin/roles`, {
+            name: this.role.name
+          })
+          .then(response => {
+            if(response.status == 200) {
+              console.log(response.status);
+              this.roles.name = ''
+              this.getRoles()
+              Swal.fire({
+                icon: 'success',
+                title: 'Ok',
+                text: response.data.message
+              })
+            }
+          })
+          .catch(error => {
+            if(error.response.status == 422) {
+              this.errored = true
+              this.getRoles()
+              console.log(error.response.data.message);
+              this.validationErrors = error.response.data.message
+            }
+            if (error.response.status == 500) {
+              console.log(error.response.data.message);
+              Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: error.response.data.message
+              })
+            }
+          })
+          .finally(() => this.loading = false)
+      } else {
+
+      }
     }
   }
 }

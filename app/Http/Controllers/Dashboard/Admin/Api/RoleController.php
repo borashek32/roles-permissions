@@ -43,17 +43,29 @@ class RoleController extends Controller
 
     public function store(ValidateRoleForm $request)
     {
+      if (Auth::user()->hasRole('admin')) {
         $role = Role::create([
             'name' => $request->name
         ]);
         if ($role) {
-            return redirect(route('admin.roles.index'))
-                ->with('success', 'Role created successfully.');
+            return response()->json([
+              'status'   => 200,
+              'message'  => 'Role created successfully.'
+            ]);
 
         } else {
-            return redirect(route('admin.roles.index'))
-                ->with('error', 'Something went wrong. Please, try later.');
+            return response()->json([
+              'status'   => 404,
+              'message'  => 'Something went wrong. Please, try later.'
+            ]);
         }
+
+      } else {
+        return response()->json([
+            'status' => 403,
+            'error'  => 'You do not have the necessary permissions'
+        ]);
+    }
     }
 
     public function edit(Role $role)
